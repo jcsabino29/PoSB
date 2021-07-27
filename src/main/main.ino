@@ -1,4 +1,3 @@
-
 /* Name: main.c
  * Description: Initial version is the skeleton code for our system. We just need to integrate the components for our system.
  * Date: 7/17/21
@@ -10,7 +9,7 @@
 /*  PIN Layout
  * 1 = Enable
  * 2 = RS
- * 4-7 = D7-D4
+ * 4-7 = D7-D4  NOTE: Changed to 3-6 in order to make space for pins
  * RW = GND
  * VSS = GND
  * VCC = +
@@ -20,18 +19,21 @@
  * 
  */
 
- 
+const int touchS = 7;
+const int motionS = 8;
 const int button1 = 9;
 const int button2 = 10;
 int button1_press = 0;
 int button2_press = 0;
+int touch_sense = 0;
+int motion_sense = 0;
 char currMessage[99] = "fdsaf";
 int currScore = 0;
 int highScore = 0;
 char currScoreStr[99]; 
 char highScoreStr[99];
 
-LiquidCrystal lcd(1, 2, 4, 5, 6, 7);
+LiquidCrystal lcd(1, 2, 3, 4, 5, 6);
 
 struct Messages {
   char welcome[99] = "Want to play?"; //Opening instructions, can change
@@ -46,10 +48,10 @@ struct Messages {
 
 /*
  * Description: State machine that controls the instructions of our instruction states.
- * Step 1: Twist head
- * Step 2: Give alcohol
- * Step 3: Detach arm.
- * Step 4: Poke eyes
+ * Step 1: Twist head = Gyroscope sensor (TODO)
+ * Step 2: Give alcohol = Alcohol sensor (TODO)
+ * Step 3: Detach arm = Motion sensor (TODO)
+ * Step 4: Poke eyes = Touch sensor (TODO)
  */
 enum instructionStates { startSM, step_1SM, step_2SM, step_3SM, step_4SM, successSM, failSM} InstructionSM;
 int instructionTick (int state, int button1, int button2) {
@@ -107,6 +109,7 @@ int instructionTick (int state, int button1, int button2) {
         break;
   }
 
+  // TODO: Randomize the instructions below:
   switch(state) {
      case(startSM):
         memcpy(currMessage, Message.welcome, sizeof(currMessage));
