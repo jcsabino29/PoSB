@@ -1,5 +1,5 @@
 # PoS Baby by Boss Baby Lovers
-**Team members:** Andress Estrada, Ricardo Lira, Jhaymar Sabino, Rizelle Vinluan
+**Team members:** Andres Estrada, Ricardo Lira, Jhaymar Sabino, Rizelle Vinluan
 
 ## Project Description
 **Objective:** We plan on building an interactive evil annoying baby that can be de-armed by doing a puzzle in which the user will perform on the baby. It is essentially a puzzle in the form of an embedded system integrated within a doll. 
