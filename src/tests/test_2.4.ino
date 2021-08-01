@@ -31,6 +31,7 @@ char currMessage[99] = "fdsaf";
 int currScore = 0;
 int highScore = 0;
 int randomNum = 0;
+int armCtr = 0;
 char currScoreStr[99];
 char highScoreStr[99];
 
@@ -102,7 +103,7 @@ int instructionTick (int state, int button1, int button2) {
         {
           state = step_2SM;
         }
-        else if (randomNum == 3)
+        else if (randomNum == 3 && armCtr < 3)
         {
           state = step_3SM;
         }
@@ -122,7 +123,7 @@ int instructionTick (int state, int button1, int button2) {
         {
           state = step_1SM;
         }
-        else if (randomNum == 3)
+        else if (randomNum == 3 && armCtr < 3)
         {
           state = step_3SM;
         }
@@ -137,6 +138,7 @@ int instructionTick (int state, int button1, int button2) {
     case (step_3SM):
       if (button1 == 1) {
         currScore += 100;
+        armCtr = armCtr + 1;
         randomize(randomNum);
         if (randomNum == 1)
         {
@@ -166,7 +168,7 @@ int instructionTick (int state, int button1, int button2) {
         {
           state = step_2SM;
         }
-        else if (randomNum == 3)
+        else if (randomNum == 3 && armCtr < 3)
         {
           state = step_3SM;
         }
