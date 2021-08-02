@@ -37,7 +37,7 @@ char highScoreStr[99];
 
 int randomize(int n) {
   randomSeed(analogRead(0));
-  n = random(4);
+  n = random(1, 4);
   return n;
 }
 
