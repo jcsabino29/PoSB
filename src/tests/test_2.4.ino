@@ -18,20 +18,26 @@
    V0 = MID (POTENTIOMETER)
 */
 
-//const int touchS = 11;
-//const int motionS = 12;
+// Digital Pin layout
 const int button1 = 9;
 const int button2 = 10;
+const int touchPin = 11;
+const int motionPin = 12;
+
+// Varaibles for detection
 int button1_press = 0;
 int button2_press = 0;
-const int touchPin = 11;
-//int motion_sense = 0;
+int touchDetected = 0;
+int motionDetected = 0;
+
+// For strings
 char currMessage[99] = "fdsaf";
-int currScore = 0;
-int highScore = 0;
 char currScoreStr[99];
 char highScoreStr[99];
-int sensorDetected = 0;
+
+// other variables
+int currScore = 0;
+int highScore = 0;
 int armCtr = 1;
 
 
@@ -69,13 +75,13 @@ struct Messages {
 */
 
 enum instructionStates { startSM, step_1SM, step_2SM, step_3SM, step_4SM, successSM, failSM} InstructionSM;
-int instructionTick (int state, int sensorDetected, int button2) {
+int instructionTick (int state, int touchDetected, int motionDetected, int button2) {
   Messages Message;
   int randomNum = 0;
 
   switch (state) {
     case (startSM):
-      if (sensorDetected == 1) {
+      if (touchDetected == 1) {
         randomNum = randomize(randomNum);
         currScore += 100;
         if (randomNum == 1)
@@ -97,92 +103,41 @@ int instructionTick (int state, int sensorDetected, int button2) {
       } else { }
       break;
     case (step_1SM):
-      if (sensorDetected == 1) {
+      if (touchDetected == 1) {
         currScore += 100;
         state = successSM;
-        /*randomNum = randomize(randomNum);
-          if (randomNum == 2)
-          {
-          state = step_2SM;
-          }
-          else if (randomNum == 3 && armCtr < 3)
-          {
-          state = step_3SM;
-          }
-          else if (randomNum == 4)
-          {
-          state = step_4SM;
-          }*/
       } else if (button2 == 1) {
         state = failSM;
       } else { }
       break;
     case (step_2SM):
-      if (sensorDetected == 1) {
+      if (touchDetected == 1) {
         currScore += 100;
         state = successSM;
-        /*randomNum = randomize(randomNum);
-          if (randomNum == 1)
-          {
-          state = step_1SM;
-          }
-          else if (randomNum == 3 && armCtr < 3)
-          {
-          state = step_3SM;
-          }
-          else if (randomNum == 4)
-          {
-          state = step_4SM;
-          }*/
+
       } else if (button2 == 1) {
         state = failSM;
       } else { }
       break;
     case (step_3SM):
-      if (sensorDetected == 1) {
+      if (motionDetected == 1) {
         currScore += 100;
         armCtr = armCtr + 1;
         state = successSM;
-        /*randomNum = randomize(randomNum);
-          if (randomNum == 1)
-          {
-          state = step_1SM;
-          }
-          else if (randomNum == 2)
-          {
-          state = step_2SM;
-          }
-          else if (randomNum == 4)
-          {
-          state = step_4SM;
-          }*/
       } else if (button2 == 1) {
         state = failSM;
       } else { }
       break;
     case (step_4SM):
-      if (sensorDetected == 1) {
+      if (touchDetected == 1) {
         currScore += 100;
         state = successSM;
-        /*randomNum = randomize(randomNum);
-          if (randomNum == 1)
-          {
-          state = step_1SM;
-          }
-          else if (randomNum == 2)
-          {
-          state = step_2SM;
-          }
-          else if (randomNum == 3 && armCtr < 3)
-          {
-          state = step_3SM;
-          }*/
       } else if (button2 == 1) {
         state = failSM;
       } else { }
       break;
     case (successSM):
-      if (sensorDetected == 1) {
+      if (touchDetected == 1) {
         // state = startSM;
         randomNum = randomize(randomNum);
         if (randomNum == 1)
@@ -306,30 +261,33 @@ void setup() {
   pinMode(button1, INPUT);
   pinMode(button2, INPUT);
   pinMode(touchPin, INPUT);
+  pinMode(motionPin, INPUT);
   //Messages Message;
 }
 
 void loop() {
   Messages Message;
+  int state = 0;
   int isPressed = 0;
   button1_press = digitalRead(button1);
   button2_press = digitalRead(button2);
-  int state = 0;
-  sensorDetected = digitalRead(touchPin);
+  touchDetected = digitalRead(touchPin);
+  motionDetected = digitalRead(motionPin);
 
   while (1) {
     button1_press = digitalRead(button1);
     button2_press = digitalRead(button2);
-    sensorDetected = digitalRead(touchPin);
-    if (sensorDetected || button2_press) {
+    touchDetected = digitalRead(touchPin);
+    motionDetected = digitalRead(motionPin);
+    if (touchDetected || button2_press || motionDetected) {
       isPressed = 1;
     } else {
       isPressed = 0;
     }
 
     if (isPressed) {
-      while (digitalRead(touchPin) || digitalRead(button2));
-      state = instructionTick(state, sensorDetected, button2_press);
+      while (digitalRead(touchPin) || digitalRead(button2) || digitalRead(motionPin);
+             state = instructionTick(state, touchDetected, motionDetected, button2_press);
     } else { }
-  }
+}
 }
