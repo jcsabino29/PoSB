@@ -31,6 +31,7 @@ int currScore = 0;
 int highScore = 0;
 char currScoreStr[99]; 
 char highScoreStr[99];
+int isAlc = 0;
 
 LiquidCrystal lcd(1, 2, 4, 5, 6, 7);
 
@@ -63,10 +64,12 @@ int instructionTick (int state, int button1, int button2) {
         } else { }
         break;
      case(step_1SM):
-        if (alcVal > 200) {
+
+        delay(5000); //Wait 5s
+        if (isAlc) {
           state = step_2SM;
           currScore += 100;
-        } else if (alcVal < 100  {
+        } else {
           state = failSM; 
         }
         /* 
@@ -220,7 +223,7 @@ void loop() {
   while (1) {
     button1_press = digitalRead(button1);
     button2_press = digitalRead(button2);
-    int alcVal = analogRead(alc);
+    isAlc = digitalRead(alc);
     
     if (button1_press || button2_press) {
       isPressed = 1;
