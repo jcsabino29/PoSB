@@ -16,22 +16,19 @@
    A = +
    K = GDN
    V0 = MID (POTENTIOMETER)
-
 */
 
-const int touchS = 11;
-const int motionS = 12;
+//const int touchS = 11;
+//const int motionS = 12;
 const int button1 = 9;
 const int button2 = 10;
 int button1_press = 0;
 int button2_press = 0;
-int touch_sense = 0;
-int motion_sense = 0;
+//int touch_sense = 0;
+//int motion_sense = 0;
 char currMessage[99] = "fdsaf";
 int currScore = 0;
 int highScore = 0;
-int randomNum = 0;
-int armCtr = 0;
 char currScoreStr[99];
 char highScoreStr[99];
 
@@ -61,7 +58,6 @@ struct Messages {
    Step 2: Give alcohol = Alcohol sensor (TODO)
    Step 3: Detach arm = Motion sensor (TODO)
    Step 4: Poke eyes = Touch sensor (RODO)
-
   TODO: Randomize the instructions below:
   step_1SM = twist head
   step_2SM = alcohol sensor
@@ -72,10 +68,12 @@ struct Messages {
 enum instructionStates { startSM, step_1SM, step_2SM, step_3SM, step_4SM, successSM, failSM} InstructionSM;
 int instructionTick (int state, int button1, int button2) {
   Messages Message;
+  int randomNum = 0;
+  int armCtr = 0;
   switch (state) {
     case (startSM):
       if (button1 == 1) {
-        randomize(randomNum);
+        randomNum = randomize(randomNum);
         currScore += 100;
         if (randomNum == 1)
         {
@@ -85,7 +83,7 @@ int instructionTick (int state, int button1, int button2) {
         {
           state = step_2SM;
         }
-        else if (randomNum == 3)
+        else if (randomNum == 3 && armCtr < 3)
         {
           state = step_3SM;
         }
@@ -98,7 +96,7 @@ int instructionTick (int state, int button1, int button2) {
     case (step_1SM):
       if (button1 == 1) {
         currScore += 100;
-        randomize(randomNum);
+        /*randomNum = randomize(randomNum);
         if (randomNum == 2)
         {
           state = step_2SM;
@@ -110,7 +108,7 @@ int instructionTick (int state, int button1, int button2) {
         else if (randomNum == 4)
         {
           state = step_4SM;
-        }
+        }*/
       } else if (button2) {
         state = failSM;
       } else { }
@@ -118,7 +116,7 @@ int instructionTick (int state, int button1, int button2) {
     case (step_2SM):
       if (button1 == 1) {
         currScore += 100;
-        randomize(randomNum);
+        /*randomNum = randomize(randomNum);
         if (randomNum == 1)
         {
           state = step_1SM;
@@ -130,7 +128,7 @@ int instructionTick (int state, int button1, int button2) {
         else if (randomNum == 4)
         {
           state = step_4SM;
-        }
+        }*/
       } else if (button2) {
         state = failSM;
       } else { }
@@ -139,7 +137,7 @@ int instructionTick (int state, int button1, int button2) {
       if (button1 == 1) {
         currScore += 100;
         armCtr = armCtr + 1;
-        randomize(randomNum);
+        /*randomNum = randomize(randomNum);
         if (randomNum == 1)
         {
           state = step_1SM;
@@ -151,7 +149,7 @@ int instructionTick (int state, int button1, int button2) {
         else if (randomNum == 4)
         {
           state = step_4SM;
-        }
+        }*/
       } else if (button2) {
         state = failSM;
       } else { }
@@ -159,7 +157,27 @@ int instructionTick (int state, int button1, int button2) {
     case (step_4SM):
       if (button1 == 1) {
         currScore += 100;
-        randomize(randomNum);
+        /*randomNum = randomize(randomNum);
+        if (randomNum == 1)
+        {
+          state = step_1SM;
+        }
+        else if (randomNum == 2)
+        {
+          state = step_2SM;
+        }
+        else if (randomNum == 3 && armCtr < 3)
+        {
+          state = step_3SM;
+        }*/
+      } else if (button2) {
+        state = failSM;
+      } else { }
+      break;
+    case (successSM):
+      if (button1 == 1) {
+       // state = startSM;
+        randomNum = randomize(randomNum);
         if (randomNum == 1)
         {
           state = step_1SM;
@@ -172,17 +190,14 @@ int instructionTick (int state, int button1, int button2) {
         {
           state = step_3SM;
         }
-      } else if (button2) {
-        state = failSM;
-      } else { }
-      break;
-    case (successSM):
-      if (button1 == 1) {
-        state = startSM;
+        else if (randomNum == 4)
+        {
+          state = step_4SM;
+        }
         currScore = 0;
       } else { }
     case (failSM):
-      if (button1 == 1) {
+      if (button2 == 1) {
         currScore = 0;
         state = startSM;
       } else { }
