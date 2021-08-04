@@ -19,13 +19,11 @@
 */
 
 // Digital Pin layout
-const int button1 = 9;
 const int button2 = 10;
 const int touchPin = 11;
 const int motionPin = 12;
 
 // Varaibles for detection
-int button1_press = 0;
 int button2_press = 0;
 int touchDetected = 0;
 int motionDetected = 0;
@@ -52,10 +50,10 @@ LiquidCrystal lcd(1, 2, 4, 5, 6, 7);
 
 struct Messages {
   char welcome[99] = "Want to play?"; //Opening instructions, can change
-  char twist_head[99] = "Twist the head";
-  char detach_arm[99] = "Detach the arm";
-  char give_alcohol[99] = "Breathe alcohol into mouth";
-  char poke_eyes[99] = "Poke the eye";
+  char twist_head[99] = "Neck cramp";
+  char detach_arm[99] = "Arm hurtie";
+  char give_alcohol[99] = "Baby thiwsty";
+  char poke_eyes[99] = "Eye itchy";
   char success[99] = "Success!";
   char fail[99] = "Fail";
   char scores[99] = "scores";
@@ -65,16 +63,11 @@ struct Messages {
    Description: State machine that controls the instructions of our instruction states.
    Step 1: Twist head = Gyroscope sensor (TODO)
    Step 2: Give alcohol = Alcohol sensor (TODO)
-   Step 3: Detach arm = Motion sensor (TODO)
-   Step 4: Poke eyes = Touch sensor (RODO)
-  TODO: Randomize the instructions below:
-  step_1SM = twist head
-  step_2SM = alcohol sensor
-  step_3SM = motion sensor
-  step_4SM = touch sensor
+   Step 3: Detach arm = Motion sensor
+   Step 4: Poke eyes = Touch sensor
 */
 
-enum instructionStates { startSM, step_1SM, step_2SM, step_3SM, step_4SM, successSM, failSM} InstructionSM;
+enum instructionStates { startSM, twistSM, alcoholSM, detachSM, pokeSM, successSM, failSM} InstructionSM;
 int instructionTick (int state, int touchDetected, int motionDetected, int button2) {
   Messages Message;
   int randomNum = 0;
@@ -86,23 +79,23 @@ int instructionTick (int state, int touchDetected, int motionDetected, int butto
         currScore += 100;
         if (randomNum == 1)
         {
-          state = step_1SM;
+          state = twistSM;
         }
         else if (randomNum == 2)
         {
-          state = step_2SM;
+          state = alcoholSM;
         }
         else if (randomNum == 3 && armCtr < 3)
         {
-          state = step_3SM;
+          state = detachSM;
         }
         else if (randomNum == 4)
         {
-          state = step_4SM;
+          state = pokeSM;
         }
       } else { }
       break;
-    case (step_1SM):
+    case (twistSM):
       if (touchDetected == 1) {
         currScore += 100;
         state = successSM;
@@ -110,7 +103,7 @@ int instructionTick (int state, int touchDetected, int motionDetected, int butto
         state = failSM;
       } else { }
       break;
-    case (step_2SM):
+    case (alcoholSM):
       if (touchDetected == 1) {
         currScore += 100;
         state = successSM;
@@ -119,7 +112,7 @@ int instructionTick (int state, int touchDetected, int motionDetected, int butto
         state = failSM;
       } else { }
       break;
-    case (step_3SM):
+    case (detachSM):
       if (motionDetected == 1) {
         currScore += 100;
         armCtr = armCtr + 1;
@@ -128,7 +121,7 @@ int instructionTick (int state, int touchDetected, int motionDetected, int butto
         state = failSM;
       } else { }
       break;
-    case (step_4SM):
+    case (pokeSM):
       if (touchDetected == 1) {
         currScore += 100;
         state = successSM;
@@ -142,19 +135,19 @@ int instructionTick (int state, int touchDetected, int motionDetected, int butto
         randomNum = randomize(randomNum);
         if (randomNum == 1)
         {
-          state = step_1SM;
+          state = twistSM;
         }
         else if (randomNum == 2)
         {
-          state = step_2SM;
+          state = alcoholSM;
         }
         else if (randomNum == 3 && armCtr < 3)
         {
-          state = step_3SM;
+          state = detachSM;
         }
         else if (randomNum == 4)
         {
-          state = step_4SM;
+          state = pokeSM;
         }
       } else {}
       break;
@@ -175,22 +168,22 @@ int instructionTick (int state, int touchDetected, int motionDetected, int butto
       lcd.clear();
       lcd.print(currMessage);
       break;
-    case (step_1SM):
+    case (twistSM):
       memcpy(currMessage, Message.twist_head, sizeof(currMessage));
       lcd.clear();
       lcd.print(currMessage);
       break;
-    case (step_2SM):
+    case (alcoholSM):
       memcpy(currMessage, Message.give_alcohol, sizeof(currMessage));
       lcd.clear();
       lcd.print(currMessage);
       break;
-    case (step_3SM):
+    case (detachSM):
       memcpy(currMessage, Message.detach_arm, sizeof(currMessage));
       lcd.clear();
       lcd.print(currMessage);
       break;
-    case (step_4SM):
+    case (pokeSM):
       memcpy(currMessage, Message.poke_eyes, sizeof(currMessage));
       lcd.clear();
       lcd.print(currMessage);
@@ -258,7 +251,6 @@ int instructionTick (int state, int touchDetected, int motionDetected, int butto
 void setup() {
   // put your setup code here, to run once:
   lcd.begin(16, 2); //Dimension of the LCD
-  pinMode(button1, INPUT);
   pinMode(button2, INPUT);
   pinMode(touchPin, INPUT);
   pinMode(motionPin, INPUT);
@@ -269,13 +261,11 @@ void loop() {
   Messages Message;
   int state = 0;
   int isPressed = 0;
-  button1_press = digitalRead(button1);
   button2_press = digitalRead(button2);
   touchDetected = digitalRead(touchPin);
   motionDetected = digitalRead(motionPin);
 
   while (1) {
-    button1_press = digitalRead(button1);
     button2_press = digitalRead(button2);
     touchDetected = digitalRead(touchPin);
     motionDetected = digitalRead(motionPin);
