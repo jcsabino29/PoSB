@@ -49,7 +49,7 @@ int randomize(int n) {
 LiquidCrystal lcd(1, 2, 4, 5, 6, 7);
 
 struct Messages {
-  char welcome[99] = "Want to play?"; //Opening instructions, can change
+  char welcome[99] = "Poke my eye to "; //Opening instructions, can change
   char twist_head[99] = "Neck cramp";
   char detach_arm[99] = "Arm hurtie";
   char give_alcohol[99] = "Baby thiwsty";
@@ -167,6 +167,10 @@ int instructionTick (int state, int touchDetected, int motionDetected, int butto
       memcpy(currMessage, Message.welcome, sizeof(currMessage));
       lcd.clear();
       lcd.print(currMessage);
+      strcpy(currMessage, "play");
+      strcat(currMessage, highScoreStr);
+      lcd.setCursor(0, 2);
+      lcd.print(currMessage);
       break;
     case (twistSM):
       memcpy(currMessage, Message.twist_head, sizeof(currMessage));
@@ -208,7 +212,7 @@ int instructionTick (int state, int touchDetected, int motionDetected, int butto
       lcd.clear();
       lcd.print(currMessage);
 
-      //Repeats same process for hihg score
+      //Repeats same process for high score
       strcpy(currMessage, "High Score: ");
       strcat(currMessage, highScoreStr);
       lcd.setCursor(0, 2);
