@@ -124,7 +124,7 @@ int instructionTick (int state, int touchDetected, int motionDetected, int butto
         currScore += 100;
         armCtr = armCtr + 1;
         state = successSM;
-      } else if (button2 == 1) {
+      } else if (button2 == 1 || touchDetected == 1) {
         state = failSM;
       } else { }
       break;
@@ -286,7 +286,7 @@ void loop() {
     }
 
     if (isPressed) {
-      while (digitalRead(touchPin) || digitalRead(button2) || digitalRead(motionPin);
+      while (digitalRead(touchPin) || digitalRead(button2) || digitalRead(motionPin));
              state = instructionTick(state, touchDetected, motionDetected, button2_press);
     } else { }
 }
