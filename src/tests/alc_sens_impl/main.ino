@@ -6,6 +6,7 @@
  
 //LiquidCrystal library used for LCD 
 #include <LiquidCrystal.h>
+#include <time.h>
 
 /*  PIN Layout
  * 1 = Enable
@@ -21,7 +22,45 @@
  */
 
 
-const int alc = 13;
+
+volatile unsigned char TimerFlag = 0;
+
+unsigned long _avr_timer_M = 1;
+unsigned long _avr_timer_cntcurr = 0;
+
+void TimerOn() {
+  TCCR1B = 0x0B;
+  OCR1A = 125;
+  TIMSK1 = 0x02;
+  TCNT1 = 0;
+  
+  _avr_timer_cntcurr = _avr_timer_M;
+  SREG |= 0x80;
+}
+
+void TimerOff() {
+  TCCR1B = 0x00;
+}
+
+void TimerISR() {
+  TimerFlag = 1;
+}
+
+ISR(TIMER1_COMPA_vect) {
+  _avr_timer_cntcurr--;
+  if (_avr_timer_cntcurr == 0) {
+    TimerISR();
+    _avr_timer_cntcurr = _avr_timer_M;
+  }
+}
+
+void TimerSet(unsigned long M) {
+  _avr_timer_M = M;
+  _avr_timer_cntcurr = _avr_timer_M;
+}
+
+
+const int alc = 3;
 const int button1 = 9;
 const int button2 = 10;
 int button1_press = 0;
@@ -32,6 +71,7 @@ int highScore = 0;
 char currScoreStr[99]; 
 char highScoreStr[99];
 int isAlc = 0;
+int actionTaken = 0;
 
 LiquidCrystal lcd(1, 2, 4, 5, 6, 7);
 
@@ -64,21 +104,14 @@ int instructionTick (int state, int button1, int button2) {
         } else { }
         break;
      case(step_1SM):
-
-        delay(5000); //Wait 5s
         if (isAlc) {
           state = step_2SM;
           currScore += 100;
-        } else {
+          TimerFlag = 1;
+          actionTaken = 1;
+        } else if (TimerFlag && !actionTaken) {
           state = failSM; 
-        }
-        /* 
-        if (button1 == 1) {
-          state = step_2SM;
-          currScore += 100;
-        } else if (button2) {
-          state = failSM;
-        } else { }*/
+        } else { }
         break;  
      case(step_2SM): //Give alcohol
         if (button1 == 1) {
@@ -125,12 +158,12 @@ int instructionTick (int state, int button1, int button2) {
         lcd.print(currMessage);
         break;
      case(step_1SM):
-        memcpy(currMessage, Message.twist_head, sizeof(currMessage));
+        memcpy(currMessage, Message.give_alcohol, sizeof(currMessage));
         lcd.clear();
         lcd.print(currMessage);
         break;
      case(step_2SM):
-        memcpy(currMessage, Message.give_alcohol, sizeof(currMessage));
+        memcpy(currMessage, Message.twist_head, sizeof(currMessage));
         lcd.clear();
         lcd.print(currMessage);
         break;
@@ -199,7 +232,6 @@ int instructionTick (int state, int button1, int button2) {
      default:
         break;
   }
-  
   return state;
 }
 
@@ -219,30 +251,20 @@ void loop() {
   button1_press = digitalRead(button1);
   button2_press = digitalRead(button2); 
   int state = 0; 
-
+  
+  //Timer Initialization
+  TimerSet(500);
+  TimerOn();
+ 
   while (1) {
     button1_press = digitalRead(button1);
     button2_press = digitalRead(button2);
     isAlc = digitalRead(alc);
-    
-    if (button1_press || button2_press) {
-      isPressed = 1;
-    } else { isPressed = 0; }
 
-    if (isPressed) {
-      while(digitalRead(button1) || digitalRead(button2)); 
-      state = instructionTick(state, button1_press, button2_press); 
-    } else { } 
-
-    
-    /*if (alcVal > 200) {
-      lcd.clear();
-      lcd.setCursor(0, 1);
-      lcd.print("There is alc");
-    } else {
-      lcd.clear();
-      lcd.setCursor(0, 1);
-      lcd.print("There is no alc");
-    }*/
+    state = instructionTick(state, button1_press, button2_press); 
+    //lcd.print(TimerFlag);
+    while(!TimerFlag);
+    TimerFlag = 0;
+    actionTaken = 0;
   }
 }
