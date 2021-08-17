@@ -27,6 +27,7 @@ volatile unsigned char TimerFlag = 0;
 
 unsigned long _avr_timer_M = 1;
 unsigned long _avr_timer_cntcurr = 0;
+unsigned short timeCtr = 0;
 
 void TimerOn() {
   TCCR1B = 0x0B;
@@ -256,15 +257,23 @@ void loop() {
   TimerSet(500);
   TimerOn();
  
-  while (1) {
+  while (timeCtr < 60) {
     button1_press = digitalRead(button1);
     button2_press = digitalRead(button2);
     isAlc = digitalRead(alc);
 
     state = instructionTick(state, button1_press, button2_press); 
-    //lcd.print(TimerFlag);
+    
     while(!TimerFlag);
+    timeCtr++;
     TimerFlag = 0;
     actionTaken = 0;
-  }
+  } 
+  
+  if (timeCtr == 60)
+  {
+    timeCtr = 61;
+    lcd.clear();
+    lcd.print("Game Over");
+  } else { }
 }
