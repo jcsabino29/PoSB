@@ -22,6 +22,7 @@
 const int button2 = 10;
 const int touchPin = 11;
 const int motionPin = 12;
+const int reset = 13;
 
 // Varaibles for detection
 int button2_press = 0;
