@@ -218,7 +218,7 @@ int instructionTick (int state, int touchLDetected, int motionLDetected, int but
         }
         else if (randomNum == 4)
         {
-          state = pokeLeftRightEye;
+          state = pokeRightEye;
         }
         else if (randomNum == 5) {
           state = detachLeftArm;
