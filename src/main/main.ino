@@ -135,11 +135,17 @@ int instructionTick (int state, int touchLDetected, int motionLDetected, int but
         }
         else if (randomNum == 3 && armCtr < 3)
         {
-          state = detachLeftArm;
+          state = pokeLeftEye;
         }
         else if (randomNum == 4)
         {
-          state = pokeLeftEye;
+          state = pokeLeftRightEye;
+        }
+        else if (randomNum == 5) {
+          state = detachLeftArm;
+        }
+        else if (randomNum == 6) {
+          state = detachRightArm;
         }
       } else { }
       break;
@@ -169,6 +175,15 @@ int instructionTick (int state, int touchLDetected, int motionLDetected, int but
         state = failSM;
       } else { }
       break;
+    case (detachRightArm):
+      if (motionLDetected == 1) {
+        currScore += 100;
+        armCtr = armCtr + 1;
+        state = successSM;
+      } else if (button2 == 1 || touchLDetected == 1) {
+        state = failSM;
+      } else { }
+      break;
     case (pokeLeftEye):
       if (touchLDetected == 1) {
         currScore += 100;
@@ -178,11 +193,17 @@ int instructionTick (int state, int touchLDetected, int motionLDetected, int but
       } else { }
       break;
     case (pokeRightEye):
+      if (touchRDetected == 1) {
+        currScore += 100;
+        state = successSM;
+      } else if (button2 == 1) {
+        state = failSM;
+      } else { }
       break;
     case (successSM):
       if (touchLDetected == 1) {
-        // state = startSM;
         randomNum = randomize(randomNum);
+        currScore += 100;
         if (randomNum == 1)
         {
           state = twistSM;
@@ -193,13 +214,19 @@ int instructionTick (int state, int touchLDetected, int motionLDetected, int but
         }
         else if (randomNum == 3 && armCtr < 3)
         {
-          state = detachLeftArm;
+          state = pokeLeftEye;
         }
         else if (randomNum == 4)
         {
-          state = pokeLeftEye;
+          state = pokeLeftRightEye;
         }
-      } else {}
+        else if (randomNum == 5) {
+          state = detachLeftArm;
+        }
+        else if (randomNum == 6) {
+          state = detachRightArm;
+        }
+      } else { }
       break;
     case (failSM):
       if (button2 == 1) {
@@ -325,6 +352,8 @@ void loop() {
   int isPressed = 0;
   int state = 0; 
   int timeLimit = 60;
+  int touchDetected = 0;
+  int motionDetected = 0;
   
   //Timer Initialization
   TimerSet(500);
@@ -338,6 +367,18 @@ void loop() {
     touchRDetected = digitalRead(touchRPin);
     motionLDetected = digitalRead(motionLPin);
     motionRDetected = digitalRead(motionRPin);
+    touchDetected = 0;
+    motionDetected = 0;
+    
+    //Touch detection
+    if (touchLDetected || touchRDetected) {
+      touchDetected = 1;
+    } else { } 
+
+    //Motion Detection
+    if (motionLDetected || motionRDetected) {
+      motionDetected = 1;
+    }
 
     /*if (touchLDetected || button2_press || motionLDetected || alcoholDetected) {
       isPressed = 1;
@@ -345,19 +386,21 @@ void loop() {
       isPressed = 0;
     }*/
 
-    //if (isPressed) {
-      //while (digitalRead(touchLPin) || digitalRead(button2) || digitalRead(motionLPin));
+    //if (isPressed || touchDetected || motionDetected) {
+      //while (digitalRead(touchLPin) || digitalRead(touchRPin) || digitalRead(button2) || digitalRead(motionLPin) || digitalRead(motionRPin));
              state = instructionTick(state, touchLDetected, motionLDetected, button2_press);
     //} else { }
 
-    //lcd.print(timeCtr);
-    
+
+
+    //Time code
     while(!TimerFlag);
     timeCtr++;
     TimerFlag = 0;
     actionTaken = 0;
   } 
-  
+
+  //Resets time limit
   if (timeCtr == timeLimit) {
     timeCtr = timeLimit++;
     lcd.clear();
