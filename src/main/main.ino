@@ -1,15 +1,17 @@
-/* Name: main.c
- * Description: Initial version is the skeleton code for our system. We just need to integrate the components for our system.
- * Date: 7/17/21
+
+/* Name: LCD_Screen_Tester
+ * Description: Prints "Hello World!" on LCD Display.
+ * Date: 7/12/21
  */
  
 //LiquidCrystal library used for LCD 
 #include <LiquidCrystal.h>
+#include <time.h>
 
 /*  PIN Layout
  * 1 = Enable
  * 2 = RS
- * 4-7 = D7-D4  NOTE: Changed to 3-6 in order to make space for pins
+ * 4-7 = D7-D4
  * RW = GND
  * VSS = GND
  * VCC = +
@@ -19,179 +21,289 @@
  * 
  */
 
-const int touchS = 7;
-const int motionS = 8;
+
+
+volatile unsigned char TimerFlag = 0;
+
+unsigned long _avr_timer_M = 1;
+unsigned long _avr_timer_cntcurr = 0;
+unsigned short timeCtr = 0;
+
+void TimerOn() {
+  TCCR1B = 0x0B;
+  OCR1A = 125;
+  TIMSK1 = 0x02;
+  TCNT1 = 0;
+  
+  _avr_timer_cntcurr = _avr_timer_M;
+  SREG |= 0x80;
+}
+
+void TimerOff() {
+  TCCR1B = 0x00;
+}
+
+void TimerISR() {
+  TimerFlag = 1;
+}
+
+ISR(TIMER1_COMPA_vect) {
+  _avr_timer_cntcurr--;
+  if (_avr_timer_cntcurr == 0) {
+    TimerISR();
+    _avr_timer_cntcurr = _avr_timer_M;
+  }
+}
+
+void TimerSet(unsigned long M) {
+  _avr_timer_M = M;
+  _avr_timer_cntcurr = _avr_timer_M;
+}
+
+// Digital Pin layout
+const int touchLPin = 11;
+const int touchRPin = 13; 
+const int motionLPin= 12;
+const int motionRPin = 14;
+const int alcoholPin = 3;
 const int button1 = 9;
 const int button2 = 10;
+
+// Varaibles for detection
+int touchLDetected = 0;
+int touchRDetected = 0;
+int motionLDetected = 0;
+int motionRDetected = 0;
 int button1_press = 0;
 int button2_press = 0;
-int touch_sense = 0;
-int motion_sense = 0;
+int alcoholDetected = 0;
+int actionTaken = 0;
+
+// Other global vars
 char currMessage[99] = "fdsaf";
 int currScore = 0;
 int highScore = 0;
 char currScoreStr[99]; 
 char highScoreStr[99];
+int armCtr = 1;
 
-LiquidCrystal lcd(1, 2, 3, 4, 5, 6);
+LiquidCrystal lcd(1, 2, 4, 5, 6, 7);
 
 struct Messages {
   char welcome[99] = "Want to play?"; //Opening instructions, can change
   char twist_head[99] = "Twist the head";
-  char detach_arm[99] = "Detach the arm";
+  char detachL_arm[99] = "Detach left arm";
+  char detachR_arm[99] = "Detach right arm";
   char give_alcohol[99] = "Breath alcohol";
-  char poke_eyes[99] = "Poke the eye";
+  char pokeL_eye[99] = "Poke left eye";
+  char pokeR_eye[99] = "Poke right eye";
   char success[99] = "Success!";
   char fail[99] = "Fail";
   char scores[99] = "scores";
 } message; 
 
+int randomize(int n) {
+  randomSeed(analogRead(0));
+  n = random(1, 5);
+  return n;
+}
+
 /*
  * Description: State machine that controls the instructions of our instruction states.
- * Step 1: Twist head = Gyroscope sensor (TODO)
- * Step 2: Give alcohol = Alcohol sensor (TODO)
- * Step 3: Detach arm = Motion sensor (TODO)
- * Step 4: Poke eyes = Touch sensor (TODO)
+ * Step 1: Twist head
+ * Step 2: Give alcohol
+ * Step 3: Detach arm.
+ * Step 4: Poke eyes
  */
-enum instructionStates { startSM, step_1SM, step_2SM, step_3SM, step_4SM, successSM, failSM} InstructionSM;
-int instructionTick (int state, int button1, int button2) {
+enum instructionStates { startSM, twistSM, alcoholSM, detachLeftArm, detachRightArm, pokeLeftEye, pokeRightEye, successSM, failSM } InstructionSM;
+int instructionTick (int state, int touchLDetected, int motionLDetected, int button2) {
   Messages Message;
-  switch(state) {
-     case(startSM):
-        if (button1 == 1) {
-          state = step_1SM;
-          currScore += 100;
-        } else { }
-        break;
-     case(step_1SM):
-        if (button1 == 1) {
-          state = step_2SM;
-          currScore += 100;
-        } else if (button2) {
-          state = failSM;
-        } else { }
-        break;
-     case(step_2SM):
-        if (button1 == 1) {
-          state = step_3SM;
-          currScore += 100;
-        } else if (button2) {
-          state = failSM;
-        } else { }
-        break;
-     case(step_3SM):
-        if (button1 == 1) {
-          state = step_4SM;
-          currScore += 100;
-        } else if (button2) {
-          state = failSM;
-        } else { }
-        break;
-     case(step_4SM):
-        if (button1 == 1) {
-          state = successSM;
-          currScore += 100;
-        } else if (button2) {
-          state = failSM;
-        } else { }
-        break;
-     case(successSM):
-        if (button1 == 1) {
-          state = startSM;
-          currScore = 0;
-        } else { }
-     case(failSM):
-        if (button1 == 1) {
-          currScore = 0;
-          state = startSM;
-        } else { }
-     default:
-        break;
+  int randomNum = 0;
+
+  switch (state) {
+    case (startSM):
+      if (touchLDetected == 1) {
+        randomNum = randomize(randomNum);
+        currScore += 100;
+        if (randomNum == 1)
+        {
+          state = twistSM;
+        }
+        else if (randomNum == 2)
+        {
+          state = alcoholSM;
+        }
+        else if (randomNum == 3 && armCtr < 3)
+        {
+          state = detachLeftArm;
+        }
+        else if (randomNum == 4)
+        {
+          state = pokeLeftEye;
+        }
+      } else { }
+      break;
+    case (twistSM):
+      if (touchLDetected == 1) {
+        currScore += 100;
+        state = successSM;
+      } else if (button2 == 1) {
+        state = failSM;
+      } else { }
+      break;
+    case (alcoholSM):
+      if (alcoholDetected) {
+        currScore += 100;
+        state = successSM;
+
+      } else if (button2 == 1) {
+        state = failSM;
+      } else { }
+      break;
+    case (detachLeftArm):
+      if (motionLDetected == 1) {
+        currScore += 100;
+        armCtr = armCtr + 1;
+        state = successSM;
+      } else if (button2 == 1 || touchLDetected == 1) {
+        state = failSM;
+      } else { }
+      break;
+    case (pokeLeftEye):
+      if (touchLDetected == 1) {
+        currScore += 100;
+        state = successSM;
+      } else if (button2 == 1) {
+        state = failSM;
+      } else { }
+      break;
+    case (pokeRightEye):
+      break;
+    case (successSM):
+      if (touchLDetected == 1) {
+        // state = startSM;
+        randomNum = randomize(randomNum);
+        if (randomNum == 1)
+        {
+          state = twistSM;
+        }
+        else if (randomNum == 2)
+        {
+          state = alcoholSM;
+        }
+        else if (randomNum == 3 && armCtr < 3)
+        {
+          state = detachLeftArm;
+        }
+        else if (randomNum == 4)
+        {
+          state = pokeLeftEye;
+        }
+      } else {}
+      break;
+    case (failSM):
+      if (button2 == 1) {
+        currScore = 0;
+        state = startSM;
+      } else { }
+      break;
+    default:
+      state = startSM;
+      break;
   }
 
-  // TODO: Randomize the instructions below:
-  switch(state) {
-     case(startSM):
-        memcpy(currMessage, Message.welcome, sizeof(currMessage));
-        lcd.clear();
-        lcd.print(currMessage);
-        break;
-     case(step_1SM):
-        memcpy(currMessage, Message.twist_head, sizeof(currMessage));
-        lcd.clear();
-        lcd.print(currMessage);
-        break;
-     case(step_2SM):
-        memcpy(currMessage, Message.give_alcohol, sizeof(currMessage));
-        lcd.clear();
-        lcd.print(currMessage);
-        break;
-     case(step_3SM):
-        memcpy(currMessage, Message.detach_arm, sizeof(currMessage));
-        lcd.clear();
-        lcd.print(currMessage);
-        break;
-     case(step_4SM):
-        memcpy(currMessage, Message.poke_eyes, sizeof(currMessage));
-        lcd.clear();
-        lcd.print(currMessage);
-        break;
-     case(successSM):
-        //New high score
-        if (currScore > highScore) {
-          highScore = currScore; 
-        } else { }
-     
-        //Converts int to char 
-        sprintf(currScoreStr, "%d", currScore);
-        sprintf(highScoreStr, "%d", highScore);
+  switch (state) {
+    case (startSM):
+      memcpy(currMessage, Message.welcome, sizeof(currMessage));
+      lcd.clear();
+      lcd.print(currMessage);
+      break;
+    case (twistSM):
+      memcpy(currMessage, Message.twist_head, sizeof(currMessage));
+      lcd.clear();
+      lcd.print(currMessage);
+      break;
+    case (alcoholSM):
+      memcpy(currMessage, Message.give_alcohol, sizeof(currMessage));
+      lcd.clear();
+      lcd.print(currMessage);
+      break;
+    case (detachLeftArm):
+      memcpy(currMessage, Message.detachL_arm, sizeof(currMessage));
+      lcd.clear();
+      lcd.print(currMessage);
+      break;
+    case (detachRightArm):
+      memcpy(currMessage, Message.detachR_arm, sizeof(currMessage));
+      lcd.clear();
+      lcd.print(currMessage);
+      break;
+    case (pokeLeftEye):
+      memcpy(currMessage, Message.pokeL_eye, sizeof(currMessage));
+      lcd.clear();
+      lcd.print(currMessage);
+      break;
+    case (pokeRightEye):
+      memcpy(currMessage, Message.pokeR_eye, sizeof(currMessage));
+      lcd.clear();
+      lcd.print(currMessage);
+      break;
+    case (successSM):
+      //New high score
+      if (currScore > highScore) {
+        highScore = currScore;
+      } else { }
 
-        //Places "Score: " --> currMessage
-        strcpy(currMessage, "Score: ");
+      //Converts int to char
+      sprintf(currScoreStr, "%d", currScore);
+      sprintf(highScoreStr, "%d", highScore);
 
-        //Concatenates a series of chars
-        strcat(currMessage, currScoreStr);
-        
-        //memcpy(currMessage, currScoreStr, sizeof(currMessage));
-        lcd.clear();
-        lcd.print(currMessage);
+      //Places "Score: " --> currMessage
+      strcpy(currMessage, "Score: ");
 
-        //Repeats same process for hihg score
-        strcpy(currMessage, "High Score: ");
-        strcat(currMessage, highScoreStr);
-        lcd.setCursor(0, 2);
-        lcd.print(currMessage);
-        break;
-     case(failSM):
-        //New high score
-        if (currScore > highScore) {
-          highScore = currScore; 
-        } else { }
-        
-        //Converts int to char 
-        sprintf(currScoreStr, "%d", currScore);
-        sprintf(highScoreStr, "%d", highScore);
+      //Concatenates a series of chars
+      strcat(currMessage, currScoreStr);
 
-        //Places "Score: " --> currMessage
-        strcpy(currMessage, "Score: ");
+      //memcpy(currMessage, currScoreStr, sizeof(currMessage));
+      lcd.clear();
+      lcd.print(currMessage);
 
-        //Concatenates a series of chars
-        strcat(currMessage, currScoreStr);
-        
-        //memcpy(currMessage, currScoreStr, sizeof(currMessage));
-        lcd.clear();
-        lcd.print(currMessage);
+      //Repeats same process for high score
+      strcpy(currMessage, "High Score: ");
+      strcat(currMessage, highScoreStr);
+      lcd.setCursor(0, 2);
+      lcd.print(currMessage);
+      break;
+    case (failSM):
+      //New high score
+      if (currScore > highScore) {
+        highScore = currScore;
+      } else { }
 
-        //Repeats same process for hihg score
-        strcpy(currMessage, "High Score: ");
-        strcat(currMessage, highScoreStr);
-        lcd.setCursor(0, 2);
-        lcd.print(currMessage);
-        break;
-     default:
-        break;
+      //Converts int to char
+      sprintf(currScoreStr, "%d", currScore);
+      sprintf(highScoreStr, "%d", highScore);
+
+      //Places "Score: " --> currMessage
+      strcpy(currMessage, "Score: ");
+
+      //Concatenates a series of chars
+      strcat(currMessage, currScoreStr);
+
+      //memcpy(currMessage, currScoreStr, sizeof(currMessage));
+      lcd.clear();
+      lcd.print(currMessage);
+
+      //Repeats same process for hihg score
+      strcpy(currMessage, "High Score: ");
+      strcat(currMessage, highScoreStr);
+      lcd.setCursor(0, 2);
+      lcd.print(currMessage);
+      break;
+    default:
+      break;
   }
-  
+
   return state;
 }
 
@@ -201,26 +313,54 @@ void setup() {
   lcd.begin(16,2); //Dimension of the LCD
   pinMode(button1, INPUT);
   pinMode(button2, INPUT);
-  //Messages Message; 
+  pinMode(alcoholPin, INPUT);
+  pinMode(touchLPin, INPUT);
+  pinMode(touchRPin, INPUT);
+  pinMode(motionLPin, INPUT);
+  pinMode(motionRPin, INPUT); 
 }
 
 void loop() {
   Messages Message;
   int isPressed = 0;
-  button1_press = digitalRead(button1);
-  button2_press = digitalRead(button2); 
   int state = 0; 
-
-  while (1) {
+  int timeLimit = 60;
+  
+  //Timer Initialization
+  TimerSet(500);
+  TimerOn();
+ 
+  while (timeCtr < timeLimit) {
     button1_press = digitalRead(button1);
     button2_press = digitalRead(button2);
-    if (button1_press || button2_press) {
-      isPressed = 1;
-    } else { isPressed = 0; }
+    alcoholDetected = digitalRead(alcoholPin);
+    touchLDetected = digitalRead(touchLPin);
+    touchRDetected = digitalRead(touchRPin);
+    motionLDetected = digitalRead(motionLPin);
+    motionRDetected = digitalRead(motionRPin);
 
-    if (isPressed) {
-      while(digitalRead(button1) || digitalRead(button2)); 
-      state = instructionTick(state, button1_press, button2_press); 
-    } else { }
-  }
+    /*if (touchLDetected || button2_press || motionLDetected || alcoholDetected) {
+      isPressed = 1;
+    } else {
+      isPressed = 0;
+    }*/
+
+    //if (isPressed) {
+      //while (digitalRead(touchLPin) || digitalRead(button2) || digitalRead(motionLPin));
+             state = instructionTick(state, touchLDetected, motionLDetected, button2_press);
+    //} else { }
+
+    //lcd.print(timeCtr);
+    
+    while(!TimerFlag);
+    timeCtr++;
+    TimerFlag = 0;
+    actionTaken = 0;
+  } 
+  
+  if (timeCtr == timeLimit) {
+    timeCtr = timeLimit++;
+    lcd.clear();
+    lcd.print("Game Over");
+  } else { }
 }
