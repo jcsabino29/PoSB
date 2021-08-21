@@ -6,10 +6,10 @@ int16_t accelerometer_x, accelerometer_y, accelerometer_z; // variables for acce
 int16_t gyro_x, gyro_y, gyro_z;                            // variables for gyro raw data
 int16_t temperature;                                       // variables for temperature data
 
-#define LED_LB 2
-#define LED_RB 3
-#define LED_RT 4
-#define LED_LT 5
+#define LED_LB 4
+#define LED_RB 5
+#define LED_RT 6
+#define LED_LT 7
 
 char tmp_str[7]; // temporary variable used in convert function
 
