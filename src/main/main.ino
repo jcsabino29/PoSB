@@ -100,6 +100,11 @@ int instructionTick (int state, int button1, int reset_button) {
           while (prevNum == randomNum) { randomNum = random(1, 7); };
           state = randomNum;
           prevNum = randomNum;
+<<<<<<< HEAD
+=======
+          highScore = highScore; //NOTE: lmk if this accidentally messes things up
+          currScore += 100;
+>>>>>>> 6ffe5eb9aadec633a7b2809aef223dcfbfb5b4ad
         } else { }
         break;
      case(twistSM):
