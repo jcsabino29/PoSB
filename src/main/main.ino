@@ -21,9 +21,9 @@
  */
 
 const int button1 = 9;
-const int button2 = 10;
+const int reset_button = 10;
 int button1_press = 0;
-int button2_press = 0;
+int reset_button_press = 0;
 char currMessage[20] = "fdsaf";
 int currScore = 0;
 int highScore = 0;
@@ -36,6 +36,7 @@ volatile unsigned char TimerFlag = 0;
 
 unsigned long _avr_timer_M = 1;
 unsigned long _avr_timer_cntcurr = 0;
+unsigned short timeLimit = 150;
 unsigned short timeCtr = 0;
 
 void TimerOn() {
@@ -81,7 +82,8 @@ struct Messages {
 } message; 
 
   char detachR_arm[20] = "Detach right arm";
-  unsigned long prevNum = 0;
+  unsigned short prevNum = 0;
+  unsigned short state = 0;
 /*
  * Description: State machine that controls the instructions of our instruction states.
  * Step 1: Twist head
@@ -89,75 +91,74 @@ struct Messages {
  * Step 3: Detach arm.
  */
 enum instructionStates { startSM, twistSM, alcoholSM, pokeLSM, pokeRSM, detachLSM, detachRSM, successSM, failSM} InstructionSM;
-int instructionTick (int state, int button1, int button2) {
+int instructionTick (int state, int button1, int reset_button) {
   Messages Message;
-  unsigned long randomNum = random(1, 5);
+  unsigned short randomNum = random(1, 7);
   switch(state) {
      case(startSM):
         if (button1 == 1) {
-          while (prevNum == randomNum) { randomNum = random(1, 5); };
+          while (prevNum == randomNum) { randomNum = random(1, 7); };
           state = randomNum;
           prevNum = randomNum;
-          currScore += 100;
         } else { }
         break;
      case(twistSM):
         if (button1 == 1) {
-          while (prevNum == randomNum) { randomNum = random(1, 5); };
+          while (prevNum == randomNum) { randomNum = random(1, 7); };
           state = randomNum;
           prevNum = randomNum;
           currScore += 100;
-        } else if (button2) {
+        } else if (reset_button) {
           state = failSM;
         } else { }
         break;
      case(alcoholSM):
         if (button1 == 1) {
-          while (prevNum == randomNum) { randomNum = random(1, 5); };
+          while (prevNum == randomNum) { randomNum = random(1, 7); };
           state = randomNum;
           prevNum = randomNum;
           currScore += 100;
-        } else if (button2) {
+        } else if (reset_button) {
           state = failSM;
         } else { }
         break;
      case(pokeLSM):
         if (button1 == 1) {
-          while (prevNum == randomNum) { randomNum = random(1, 5); };
+          while (prevNum == randomNum) { randomNum = random(1, 7); };
           state = randomNum;
           prevNum = randomNum;
           currScore += 100;
-        } else if (button2) {
+        } else if (reset_button) {
           state = failSM;
         } else { }
         break;
       case(pokeRSM):
-        while (prevNum == randomNum) { randomNum = random(1, 5); };
+        while (prevNum == randomNum) { randomNum = random(1, 7); };
         if (button1 == 1) {
           state = randomNum;
           prevNum = randomNum;
           currScore += 100;
-        } else if (button2) {
+        } else if (reset_button) {
           state = failSM;
         } else { }
         break;
      case(detachLSM):
         if (button1 == 1) {
-          while (prevNum == randomNum) { randomNum = random(1, 5); };
+          while (prevNum == randomNum) { randomNum = random(1, 7); };
           state = randomNum;
           prevNum = randomNum;
           currScore += 100;
-        } else if (button2) {
+        } else if (reset_button) {
           state = failSM;
         } else { }
         break;
      case(detachRSM):
         if (button1 == 1) {
-          while (prevNum == randomNum) { randomNum = random(1, 5); };
+          while (prevNum == randomNum) { randomNum = random(1, 7); };
           state = randomNum;
           prevNum = randomNum;
           currScore += 100;
-        } else if (button2) {
+        } else if (reset_button) {
           state = failSM;
         } else { }
         break;
@@ -169,7 +170,10 @@ int instructionTick (int state, int button1, int button2) {
      case(startSM):
         memcpy(currMessage, Message.welcome, sizeof(currMessage));
         lcd.clear();
-        lcd.print(currMessage);
+        lcd.setCursor(0,0); 
+        lcd.print("Press START to");
+        lcd.setCursor(0, 1);
+        lcd.print("play!...");
         break;
      case(twistSM):
         memcpy(currMessage, Message.twist_head, sizeof(currMessage));
@@ -234,7 +238,8 @@ int instructionTick (int state, int button1, int button2) {
         if (currScore > highScore) {
           highScore = currScore; 
         } else { }
-        
+
+        timeCtr = timeLimit + 1;
         //Converts int to char 
         sprintf(currScoreStr, "%d", currScore);
         sprintf(highScoreStr, "%d", highScore);
@@ -254,6 +259,10 @@ int instructionTick (int state, int button1, int button2) {
         strcat(currMessage, highScoreStr);
         lcd.setCursor(0, 2);
         lcd.print(currMessage);
+
+        delay(2000);
+        state = 0;
+        instructionTick(0, 0, 0);
         break;
      default:
         break;
@@ -267,32 +276,31 @@ void setup() {
   // put your setup code here, to run once:
   lcd.begin(16,2); //Dimension of the LCD
   pinMode(button1, INPUT);
-  pinMode(button2, INPUT);
-  //Messages Message; 
+  pinMode(reset_button, INPUT);
+  timeCtr = timeLimit + 1;
+  instructionTick(0, 0, 0);
 }
 
 void loop() {
   Messages Message;
-  int isPressed = 0;
+  unsigned short isPressed = 0;
   button1_press = digitalRead(button1);
-  button2_press = digitalRead(button2); 
-  int state = 0; 
-  unsigned short timeCtr = 0;
-  unsigned short timeLimit = 300;
+  reset_button_press = digitalRead(reset_button); 
 
   //Timer Initialization
   TimerSet(100);
   TimerOn();
+  
   while (timeCtr < timeLimit) {
     button1_press = digitalRead(button1);
-    button2_press = digitalRead(button2);
-    if (button1_press || button2_press) {
+    reset_button_press = digitalRead(reset_button);
+    if (button1_press || reset_button_press) {
       isPressed = 1;
     } else { isPressed = 0; }
 
     if (isPressed) {
-      while(digitalRead(button1) || digitalRead(button2)); 
-      state = instructionTick(state, button1_press, button2_press); 
+      while(digitalRead(button1) || digitalRead(reset_button)); 
+      state = instructionTick(state, button1_press, reset_button_press); 
     } else { }
 
     //Time code
@@ -303,8 +311,27 @@ void loop() {
 
   //Resets time limit
   if (timeCtr == timeLimit) {
-    timeCtr = timeLimit++;
+    timeCtr = timeLimit + 1;
     lcd.clear();
-    lcd.print("Game Over");
+    lcd.print("Game Over!");
+    
+    delay(2000);
+    lcd.clear();
+    instructionTick(7, button1_press, reset_button_press); 
+    
+    delay(2000); 
+    instructionTick(0, button1_press, reset_button_press); 
+
+    state = 0;
+  } else { }
+
+  if (digitalRead(reset_button)) {
+    while(digitalRead(reset_button)); 
+    timeCtr = 0;
+    currScore = 0;
+
+    state = instructionTick(random(1, 7), 0, 0); 
+    //isLDetached = 0;
+    //isRDetached = 0;
   } else { }
 }
