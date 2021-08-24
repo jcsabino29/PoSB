@@ -98,6 +98,7 @@ int instructionTick (int state, int button1, int button2) {
           while (prevNum == randomNum) { randomNum = random(1, 5); };
           state = randomNum;
           prevNum = randomNum;
+          highScore = highScore; //NOTE: lmk if this accidentally messes things up
           currScore += 100;
         } else { }
         break;
