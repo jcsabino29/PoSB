@@ -20,8 +20,19 @@
  * 
  */
 
-const int button1 = 9;
-const int reset_button = 10;
+//digital pins
+const unsigned short button1 = 9;
+const unsigned short reset_button = 10;
+const unsigned short touchLPin = 11;
+const unsigned short touchRPin = 0;
+const unsigned short motionLPin = 12;
+const unsigned short motionRPin = 0;
+const unsigned short alcoholPin = 3;
+const unsigned short speakerPin = 0;
+const unsigned short gyroscopePin = 0;
+
+
+//other global vars
 int button1_press = 0;
 int reset_button_press = 0;
 char currMessage[20] = "fdsaf";
@@ -84,6 +95,8 @@ struct Messages {
   char detachR_arm[20] = "Detach right arm";
   unsigned short prevNum = 0;
   unsigned short state = 0;
+  unsigned short isRDetached = 0;
+  unsigned short isLDetached = 0;
 /*
  * Description: State machine that controls the instructions of our instruction states.
  * Step 1: Twist head
@@ -97,19 +110,14 @@ int instructionTick (int state, int button1, int reset_button) {
   switch(state) {
      case(startSM):
         if (button1 == 1) {
-          while (prevNum == randomNum) { randomNum = random(1, 7); };
+          while (prevNum == randomNum || (isLDetached && (randomNum == 5)) || (isRDetached && (randomNum == 6))) { randomNum = random(1, 7); };
           state = randomNum;
           prevNum = randomNum;
-<<<<<<< HEAD
-=======
-          highScore = highScore; //NOTE: lmk if this accidentally messes things up
-          currScore += 100;
->>>>>>> 6ffe5eb9aadec633a7b2809aef223dcfbfb5b4ad
         } else { }
         break;
      case(twistSM):
         if (button1 == 1) {
-          while (prevNum == randomNum) { randomNum = random(1, 7); };
+          while (prevNum == randomNum || (isLDetached && (randomNum == 5)) || (isRDetached && (randomNum == 6))) { randomNum = random(1, 7); };
           state = randomNum;
           prevNum = randomNum;
           currScore += 100;
@@ -119,7 +127,7 @@ int instructionTick (int state, int button1, int reset_button) {
         break;
      case(alcoholSM):
         if (button1 == 1) {
-          while (prevNum == randomNum) { randomNum = random(1, 7); };
+          while (prevNum == randomNum || (isLDetached && (randomNum == 5)) || (isRDetached && (randomNum == 6))) { randomNum = random(1, 7); };
           state = randomNum;
           prevNum = randomNum;
           currScore += 100;
@@ -129,7 +137,7 @@ int instructionTick (int state, int button1, int reset_button) {
         break;
      case(pokeLSM):
         if (button1 == 1) {
-          while (prevNum == randomNum) { randomNum = random(1, 7); };
+          while (prevNum == randomNum || (isLDetached && (randomNum == 5)) || (isRDetached && (randomNum == 6))) { randomNum = random(1, 7); };
           state = randomNum;
           prevNum = randomNum;
           currScore += 100;
@@ -138,7 +146,7 @@ int instructionTick (int state, int button1, int reset_button) {
         } else { }
         break;
       case(pokeRSM):
-        while (prevNum == randomNum) { randomNum = random(1, 7); };
+          while (prevNum == randomNum || (isLDetached && (randomNum == 5)) || (isRDetached && (randomNum == 6))) { randomNum = random(1, 7); };
         if (button1 == 1) {
           state = randomNum;
           prevNum = randomNum;
@@ -149,19 +157,21 @@ int instructionTick (int state, int button1, int reset_button) {
         break;
      case(detachLSM):
         if (button1 == 1) {
-          while (prevNum == randomNum) { randomNum = random(1, 7); };
+          while (prevNum == randomNum || (isLDetached && (randomNum == 5)) || (isRDetached && (randomNum == 6))) { randomNum = random(1, 7); };
           state = randomNum;
           prevNum = randomNum;
           currScore += 100;
+          isLDetached = 1;
         } else if (reset_button) {
           state = failSM;
         } else { }
         break;
      case(detachRSM):
         if (button1 == 1) {
-          while (prevNum == randomNum) { randomNum = random(1, 7); };
+          while (prevNum == randomNum || (isLDetached && (randomNum == 5)) || (isRDetached && (randomNum == 6))) { randomNum = random(1, 7); };
           state = randomNum;
           prevNum = randomNum;
+          isRDetached = 1;
           currScore += 100;
         } else if (reset_button) {
           state = failSM;
@@ -336,7 +346,7 @@ void loop() {
     currScore = 0;
 
     state = instructionTick(random(1, 7), 0, 0); 
-    //isLDetached = 0;
-    //isRDetached = 0;
+    isLDetached = 0;
+    isRDetached = 0;
   } else { }
 }
