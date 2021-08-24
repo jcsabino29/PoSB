@@ -24,30 +24,39 @@
 const unsigned short button1 = 9;
 const unsigned short reset_button = 10;
 const unsigned short touchLPin = 11;
-const unsigned short touchRPin = 0;
+const unsigned short touchRPin = 8;
 const unsigned short motionLPin = 12;
-const unsigned short motionRPin = 0;
+const unsigned short motionRPin = 13;
 const unsigned short alcoholPin = 3;
 const unsigned short speakerPin = 0;
 const unsigned short gyroscopePin = 0;
 
 
+//digital pin helper vars
+unsigned short touchLDetected = 0;
+unsigned short touchRDetected = 0;
+unsigned short motionLDetected = 0;
+unsigned short motionRDetected = 0;
+unsigned short alcoholDetected = 0;
+//unsigned short twistDetected = 0;
+
 //other global vars
-int button1_press = 0;
-int reset_button_press = 0;
+unsigned short button1_press = 0;
+unsigned short reset_button_press = 0;
 char currMessage[20] = "fdsaf";
-int currScore = 0;
-int highScore = 0;
+unsigned long currScore = 0;
+unsigned long highScore = 0;
 char currScoreStr[30]; 
 char highScoreStr[30];
 
 LiquidCrystal lcd(1, 2, 4, 5, 6, 7);
 
-volatile unsigned char TimerFlag = 0;
 
+//Time variables
+volatile unsigned char TimerFlag = 0;
 unsigned long _avr_timer_M = 1;
 unsigned long _avr_timer_cntcurr = 0;
-unsigned short timeLimit = 150;
+unsigned short timeLimit = 200;
 unsigned short timeCtr = 0;
 
 void TimerOn() {
@@ -92,11 +101,13 @@ struct Messages {
   char scores[10] = "scores";
 } message; 
 
-  char detachR_arm[20] = "Detach right arm";
-  unsigned short prevNum = 0;
-  unsigned short state = 0;
-  unsigned short isRDetached = 0;
-  unsigned short isLDetached = 0;
+//Other global helper variables 
+char detachR_arm[20] = "Detach right arm";
+unsigned short prevNum = 0;
+unsigned short state = 0;
+unsigned short isRDetached = 0;
+unsigned short isLDetached = 0;
+
 /*
  * Description: State machine that controls the instructions of our instruction states.
  * Step 1: Twist head
@@ -104,7 +115,7 @@ struct Messages {
  * Step 3: Detach arm.
  */
 enum instructionStates { startSM, twistSM, alcoholSM, pokeLSM, pokeRSM, detachLSM, detachRSM, successSM, failSM} InstructionSM;
-int instructionTick (int state, int button1, int reset_button) {
+int instructionTick (unsigned short state, unsigned short button1, unsigned short reset_button) {
   Messages Message;
   unsigned short randomNum = random(1, 7);
   switch(state) {
@@ -126,7 +137,7 @@ int instructionTick (int state, int button1, int reset_button) {
         } else { }
         break;
      case(alcoholSM):
-        if (button1 == 1) {
+        if (alcoholDetected == 1) {
           while (prevNum == randomNum || (isLDetached && (randomNum == 5)) || (isRDetached && (randomNum == 6))) { randomNum = random(1, 7); };
           state = randomNum;
           prevNum = randomNum;
@@ -136,7 +147,7 @@ int instructionTick (int state, int button1, int reset_button) {
         } else { }
         break;
      case(pokeLSM):
-        if (button1 == 1) {
+        if (touchLDetected == 1) {
           while (prevNum == randomNum || (isLDetached && (randomNum == 5)) || (isRDetached && (randomNum == 6))) { randomNum = random(1, 7); };
           state = randomNum;
           prevNum = randomNum;
@@ -147,7 +158,7 @@ int instructionTick (int state, int button1, int reset_button) {
         break;
       case(pokeRSM):
           while (prevNum == randomNum || (isLDetached && (randomNum == 5)) || (isRDetached && (randomNum == 6))) { randomNum = random(1, 7); };
-        if (button1 == 1) {
+        if (touchRDetected == 1) {
           state = randomNum;
           prevNum = randomNum;
           currScore += 100;
@@ -156,7 +167,7 @@ int instructionTick (int state, int button1, int reset_button) {
         } else { }
         break;
      case(detachLSM):
-        if (button1 == 1) {
+        if (motionLDetected == 1) {
           while (prevNum == randomNum || (isLDetached && (randomNum == 5)) || (isRDetached && (randomNum == 6))) { randomNum = random(1, 7); };
           state = randomNum;
           prevNum = randomNum;
@@ -167,7 +178,7 @@ int instructionTick (int state, int button1, int reset_button) {
         } else { }
         break;
      case(detachRSM):
-        if (button1 == 1) {
+        if (motionRDetected == 1) {
           while (prevNum == randomNum || (isLDetached && (randomNum == 5)) || (isRDetached && (randomNum == 6))) { randomNum = random(1, 7); };
           state = randomNum;
           prevNum = randomNum;
@@ -290,6 +301,13 @@ int instructionTick (int state, int button1, int reset_button) {
 void setup() {
   // put your setup code here, to run once:
   lcd.begin(16,2); //Dimension of the LCD
+  pinMode(touchLPin, INPUT);
+  pinMode(touchRPin, INPUT);
+  pinMode(motionLPin, INPUT);
+  pinMode(motionRPin, INPUT);
+  pinMode(alcoholPin, INPUT);
+  pinMode(speakerPin, INPUT);
+  pinMode(gyroscopePin, INPUT);
   pinMode(button1, INPUT);
   pinMode(reset_button, INPUT);
   timeCtr = timeLimit + 1;
@@ -299,21 +317,50 @@ void setup() {
 void loop() {
   Messages Message;
   unsigned short isPressed = 0;
+  unsigned short isTouched = 0;
+  unsigned short isMoved = 0;
+  unsigned short isAlcohol = 0;
   button1_press = digitalRead(button1);
   reset_button_press = digitalRead(reset_button); 
 
   //Timer Initialization
-  TimerSet(100);
+  TimerSet(300);
   TimerOn();
   
   while (timeCtr < timeLimit) {
+    //Button detection
     button1_press = digitalRead(button1);
     reset_button_press = digitalRead(reset_button);
     if (button1_press || reset_button_press) {
       isPressed = 1;
     } else { isPressed = 0; }
 
-    if (isPressed) {
+    //Touch detection
+    if (digitalRead(touchLPin)) {
+      touchLDetected = 1;
+      isTouched = 1;
+    } else if (digitalRead(touchRPin)) {
+      touchRDetected = 1; 
+      isTouched = 1;
+    } else { isTouched = 0; touchLDetected = 0; touchRDetected = 0; }
+
+    //Motion detection
+    if (digitalRead(motionLPin)) {
+      motionLDetected = 1;
+      isMoved = 1;
+    } else if (digitalRead(motionRPin)) {
+      motionRDetected = 1;
+      isMoved = 1;
+    } else { isMoved = 0; motionLDetected = 0; motionRDetected = 0; }
+
+    //Alcohol detection
+    if (digitalRead(alcoholPin)) {
+      alcoholDetected = 1;
+      isAlcohol = 1;
+    } else { alcoholDetected = 0; isAlcohol = 0; }
+
+    // State call
+    if (isPressed || isTouched || isMoved || isAlcohol) {
       while(digitalRead(button1) || digitalRead(reset_button)); 
       state = instructionTick(state, button1_press, reset_button_press); 
     } else { }
