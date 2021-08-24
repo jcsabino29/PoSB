@@ -277,8 +277,13 @@ void loop() {
   button1_press = digitalRead(button1);
   button2_press = digitalRead(button2); 
   int state = 0; 
+  unsigned short timeCtr = 0;
+  unsigned short timeLimit = 300;
 
-  while (1) {
+  //Timer Initialization
+  TimerSet(100);
+  TimerOn();
+  while (timeCtr < timeLimit) {
     button1_press = digitalRead(button1);
     button2_press = digitalRead(button2);
     if (button1_press || button2_press) {
@@ -289,5 +294,17 @@ void loop() {
       while(digitalRead(button1) || digitalRead(button2)); 
       state = instructionTick(state, button1_press, button2_press); 
     } else { }
+
+    //Time code
+    while(!TimerFlag);
+    timeCtr++;
+    TimerFlag = 0;
   }
+
+  //Resets time limit
+  if (timeCtr == timeLimit) {
+    timeCtr = timeLimit++;
+    lcd.clear();
+    lcd.print("Game Over");
+  } else { }
 }
