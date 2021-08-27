@@ -1,13 +1,10 @@
 
-
-
 /* Name: LCD_Screen_Tester
  * Description: Prints "Hello World!" on LCD Display.
  * Date: 7/12/21
  */
  
 //LiquidCrystal library used for LCD 
-
 #include <LiquidCrystal.h>
 
 /*  PIN Layout
@@ -62,6 +59,8 @@ unsigned long _avr_timer_cntcurr = 0;
 unsigned short timeLimit = 200;
 unsigned short timeCtr = 0;
 
+
+//Timer code reference: CS120B
 void TimerOn() {
   TCCR1B = 0x0B;
   OCR1A = 125;
@@ -92,12 +91,14 @@ void TimerSet(unsigned long M) {
   _avr_timer_M = M;
   _avr_timer_cntcurr = _avr_timer_M;
 }
+////////////////////////////////////
+
 
 struct Messages {
   char welcome[20] = "Want to play?"; //Opening instructions, can change
   char twist_head[20] = "Twist the head";
   char detachL_arm[20] = "Detach left arm";
-  char give_alcohol[20] = "Breath alcohol";
+  char give_alcohol[20] = "Give alcohol";
   char pokeL_eye[20] = "Poke left eye";
   char success[20] = "Success!";
   char fail[10] = "Fail";
@@ -117,7 +118,7 @@ unsigned short isLDetached = 0;
  * Step 2: Give alcohol
  * Step 3: Detach arm.
  */
-enum instructionStates { startSM, twistSM, alcoholSM, pokeLSM, pokeRSM, detachLSM, detachRSM, successSM, failSM} InstructionSM;
+enum instructionStates { startSM, twistSM, alcoholSM, pokeLSM, pokeRSM, detachLSM, detachRSM, successSM, resetSM} InstructionSM;
 int instructionTick (unsigned short state, unsigned short button1, unsigned short reset_button) {
   Messages Message;
   unsigned short randomNum = random(1, 7);
@@ -136,7 +137,7 @@ int instructionTick (unsigned short state, unsigned short button1, unsigned shor
           prevNum = randomNum;
           currScore += 100;
         } else if (reset_button) {
-          state = failSM;
+          state = resetSM;
         } else { }
         break;
      case(alcoholSM):
@@ -146,7 +147,7 @@ int instructionTick (unsigned short state, unsigned short button1, unsigned shor
           prevNum = randomNum;
           currScore += 100;
         } else if (reset_button) {
-          state = failSM;
+          state = resetSM;
         } else { }
         break;
      case(pokeLSM):
@@ -156,7 +157,7 @@ int instructionTick (unsigned short state, unsigned short button1, unsigned shor
           prevNum = randomNum;
           currScore += 100;
         } else if (reset_button) {
-          state = failSM;
+          state = resetSM;
         } else { }
         break;
       case(pokeRSM):
@@ -166,7 +167,7 @@ int instructionTick (unsigned short state, unsigned short button1, unsigned shor
           prevNum = randomNum;
           currScore += 100;
         } else if (reset_button) {
-          state = failSM;
+          state = resetSM;
         } else { }
         break;
      case(detachLSM):
@@ -177,7 +178,7 @@ int instructionTick (unsigned short state, unsigned short button1, unsigned shor
           currScore += 100;
           isLDetached = 1;
         } else if (reset_button) {
-          state = failSM;
+          state = resetSM;
         } else { }
         break;
      case(detachRSM):
@@ -188,7 +189,7 @@ int instructionTick (unsigned short state, unsigned short button1, unsigned shor
           isRDetached = 1;
           currScore += 100;
         } else if (reset_button) {
-          state = failSM;
+          state = resetSM;
         } else { }
         break;
      default:
@@ -239,7 +240,11 @@ int instructionTick (unsigned short state, unsigned short button1, unsigned shor
      case(successSM):
         //New high score
         if (currScore > highScore) {
-          highScore = currScore; 
+          highScore = currScore;
+          lcd.clear();
+          lcd.setCursor(0,0);
+          lcd.print("NEW HIGH SCORE!"); 
+          delay(2000);
         } else { }
      
         //Converts int to char 
@@ -262,13 +267,16 @@ int instructionTick (unsigned short state, unsigned short button1, unsigned shor
         lcd.setCursor(0, 2);
         lcd.print(currMessage);
         break;
-     case(failSM):
-        //New high score
-        if (currScore > highScore) {
-          highScore = currScore; 
-        } else { }
+     case(resetSM):
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("RESETTING GAME..");
+        delay(2000);
 
         timeCtr = timeLimit + 1;
+        highScore = 0;
+        currScore = 0;
+        
         //Converts int to char 
         sprintf(currScoreStr, "%d", currScore);
         sprintf(highScoreStr, "%d", highScore);
@@ -370,13 +378,12 @@ void loop() {
       state = instructionTick(state, button1_press, reset_button_press); 
     } else { }
 
+    //Count down 
     lcd.setCursor(0,1);
-    if ((timeCtr % 2) == 0) { 
-      sprintf(timeStr, "%d", ((timeLimit/2) - timeCtr/2));
-      //strcat(timeMsg, timeStr);
-      lcd.print(timeMsg);
-      lcd.print(timeStr);
-    } else { }
+    sprintf(timeStr, "%d", ((timeLimit/2) - timeCtr/2));
+    lcd.print(timeMsg);
+    lcd.print(timeStr);
+      
     //Time code
     while(!TimerFlag);
     timeCtr++;
@@ -399,6 +406,7 @@ void loop() {
     state = 0;
   } else { }
 
+  //Reset function
   if (digitalRead(reset_button)) {
     while(digitalRead(reset_button)); 
     timeCtr = 0;
