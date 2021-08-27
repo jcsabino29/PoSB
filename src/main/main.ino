@@ -1,10 +1,13 @@
 
+
+
 /* Name: LCD_Screen_Tester
  * Description: Prints "Hello World!" on LCD Display.
  * Date: 7/12/21
  */
  
 //LiquidCrystal library used for LCD 
+
 #include <LiquidCrystal.h>
 
 /*  PIN Layout
@@ -320,11 +323,13 @@ void loop() {
   unsigned short isTouched = 0;
   unsigned short isMoved = 0;
   unsigned short isAlcohol = 0;
+  char timeStr[3] = "ad";
+  char timeMsg[20] = "Time: ";
   button1_press = digitalRead(button1);
   reset_button_press = digitalRead(reset_button); 
 
   //Timer Initialization
-  TimerSet(300);
+  TimerSet(500);
   TimerOn();
   
   while (timeCtr < timeLimit) {
@@ -365,6 +370,13 @@ void loop() {
       state = instructionTick(state, button1_press, reset_button_press); 
     } else { }
 
+    lcd.setCursor(0,1);
+    if ((timeCtr % 2) == 0) { 
+      sprintf(timeStr, "%d", ((timeLimit/2) - timeCtr/2));
+      //strcat(timeMsg, timeStr);
+      lcd.print(timeMsg);
+      lcd.print(timeStr);
+    } else { }
     //Time code
     while(!TimerFlag);
     timeCtr++;
