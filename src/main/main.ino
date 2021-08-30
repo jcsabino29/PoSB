@@ -1,13 +1,10 @@
 
-
-
 /* Name: LCD_Screen_Tester
  * Description: Prints "Hello World!" on LCD Display.
  * Date: 7/12/21
  */
  
 //LiquidCrystal library used for LCD 
-
 #include <LiquidCrystal.h>
 #include "Wire.h"
 
@@ -67,6 +64,8 @@ unsigned long _avr_timer_cntcurr = 0;
 unsigned short timeLimit = 200;
 unsigned short timeCtr = 0;
 
+
+//Timer code reference: CS120B
 void TimerOn() {
   TCCR1B = 0x0B;
   OCR1A = 125;
@@ -97,6 +96,8 @@ void TimerSet(unsigned long M) {
   _avr_timer_M = M;
   _avr_timer_cntcurr = _avr_timer_M;
 }
+////////////////////////////////////
+
 
 struct Messages {
   char welcome[20] = "Want to play?"; //Opening instructions, can change
@@ -143,7 +144,7 @@ int instructionTick (unsigned short state, unsigned short reset_button) {
           prevNum = randomNum;
           currScore += 100;
         } else if (reset_button) {
-          state = failSM;
+          state = resetSM;
         } else { }
         break;
      case(alcoholSM):
@@ -153,7 +154,7 @@ int instructionTick (unsigned short state, unsigned short reset_button) {
           prevNum = randomNum;
           currScore += 100;
         } else if (reset_button) {
-          state = failSM;
+          state = resetSM;
         } else { }
         break;
      case(pokeLSM):
@@ -163,7 +164,7 @@ int instructionTick (unsigned short state, unsigned short reset_button) {
           prevNum = randomNum;
           currScore += 100;
         } else if (reset_button) {
-          state = failSM;
+          state = resetSM;
         } else { }
         break;
       case(pokeRSM):
@@ -173,7 +174,7 @@ int instructionTick (unsigned short state, unsigned short reset_button) {
           prevNum = randomNum;
           currScore += 100;
         } else if (reset_button) {
-          state = failSM;
+          state = resetSM;
         } else { }
         break;
      case(detachLSM):
@@ -184,7 +185,7 @@ int instructionTick (unsigned short state, unsigned short reset_button) {
           currScore += 100;
           isLDetached = 1;
         } else if (reset_button) {
-          state = failSM;
+          state = resetSM;
         } else { }
         break;
      case(detachRSM):
@@ -195,7 +196,7 @@ int instructionTick (unsigned short state, unsigned short reset_button) {
           isRDetached = 1;
           currScore += 100;
         } else if (reset_button) {
-          state = failSM;
+          state = resetSM;
         } else { }
         break;
      default:
@@ -246,7 +247,11 @@ int instructionTick (unsigned short state, unsigned short reset_button) {
      case(successSM):
         //New high score
         if (currScore > highScore) {
-          highScore = currScore; 
+          highScore = currScore;
+          lcd.clear();
+          lcd.setCursor(0,0);
+          lcd.print("NEW HIGH SCORE!"); 
+          delay(2000);
         } else { }
      
         //Converts int to char 
@@ -269,13 +274,16 @@ int instructionTick (unsigned short state, unsigned short reset_button) {
         lcd.setCursor(0, 2);
         lcd.print(currMessage);
         break;
-     case(failSM):
-        //New high score
-        if (currScore > highScore) {
-          highScore = currScore; 
-        } else { }
+     case(resetSM):
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("RESETTING GAME..");
+        delay(2000);
 
         timeCtr = timeLimit + 1;
+        highScore = 0;
+        currScore = 0;
+        
         //Converts int to char 
         sprintf(currScoreStr, "%d", currScore);
         sprintf(highScoreStr, "%d", highScore);
@@ -393,13 +401,12 @@ void loop() {
       state = instructionTick(state, reset_button_press); 
     } else { }
 
+    //Count down 
     lcd.setCursor(0,1);
-    if ((timeCtr % 2) == 0) { 
-      sprintf(timeStr, "%d", ((timeLimit/2) - timeCtr/2));
-      //strcat(timeMsg, timeStr);
-      lcd.print(timeMsg);
-      lcd.print(timeStr);
-    } else { }
+    sprintf(timeStr, "%d", ((timeLimit/2) - timeCtr/2));
+    lcd.print(timeMsg);
+    lcd.print(timeStr);
+      
     //Time code
     while(!TimerFlag);
     timeCtr++;
@@ -422,6 +429,7 @@ void loop() {
     state = 0;
   } else { }
 
+  //Reset function
   if (digitalRead(reset_button)) {
     while(digitalRead(reset_button)); 
     timeCtr = 0;
