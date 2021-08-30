@@ -21,7 +21,7 @@
  */
 
 
-const int alc = 13;
+const int alc = 12;
 const int button1 = 9;
 const int button2 = 10;
 int button1_press = 0;
@@ -32,7 +32,7 @@ int highScore = 0;
 char currScoreStr[99]; 
 char highScoreStr[99];
 
-LiquidCrystal lcd(1, 2, 4, 5, 6, 7);
+LiquidCrystal lcd(2, 3, 4, 5, 6, 7);
 
 struct Messages {
   char welcome[99] = "Want to play?"; //Opening instructions, can change
@@ -227,7 +227,8 @@ void loop() {
     if (alcVal > 200) {
       //lcd.clear();
       lcd.setCursor(0, 1);
-      lcd.print("There is alc");
+      lcd.print(alcVal);
+      delay(1000);
     } else {
       //lcd.clear();
       lcd.setCursor(0, 1);
