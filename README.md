@@ -30,7 +30,7 @@ Milestone # | What to Complete | What to Demo | Date Due
 ------------ | ------------- | ------------- | -------------
 1 | <ul><li>Make sure Arduino Uno isn't faulty</li><li>Set up LCD screen</li><li>Set up speakers</li><li>Set up amplifier</li><li>Set up motion sensor</li><li>Set up touch sensor</li><li>Add scoring system (current and high score)</li><li>Add reset button</li><li>Create instructions</li></ul> | <ul><li>LCD screen outputs text</li><li>Speakers output noise</li><li>Show speaker volume rise and decrease with amplifier</li><li>Motion sensors sense motion</li><li>Touch sensors sense touch</li><li>Reset button sets both scores to 0</li><li>Button acts as successful action to cycle through instructions</li></ul> | 07/18/2021
 2 | <ul><li>Set up gyroscope sensor</li><li>Set up alcohol sensor</li><li>Have speakers output custom noise</li><li>Integrate motion sensor into game functionality</li><li>Integrate touch sensor into game functionality</li><li>Randomize instructions</li></ul> | <ul><li>Gyroscope sensor detects twisting movement</li><li>Alcohol sensor detects alcohol</li><li>Speakers output baby crying</li><li>Show motion sensor being triggered while game is playing instead of button</li><li>Show touch sensor being triggered while game is playing instead of button</li><li>Use buttons for other instructions and show that instructions are randomized</li></ul> | 08/08/2021
-3 | <li>Integrate gyroscope sensor into game functionality</li><li>Integrate alcohol sensor into game functionality</li><li>Add custom speaker noise for each instruction</li><li>Place components into baby</li> | <li>Show gyroscope sensor being triggered while game is playing instead of button</li><li>Show alcohol sensor being triggered while game is playing instead of button</li><li>Play the entire game to show that there is custom noise for each instruction</li><li>Show that all parts are inside the baby</li> | 08/29/2021
+3 | <ul><li>Integrate gyroscope sensor into game functionality</li><li>Integrate alcohol sensor into game functionality</li><li>Add custom speaker noise for each instruction</li><li>Place components into baby</li></ul> | <ul><li>Show gyroscope sensor being triggered while game is playing instead of button</li><li>Show alcohol sensor being triggered while game is playing instead of button</li><li>Play the entire game to show that there is custom noise for each instruction</li><li>Show that all parts are inside the baby</li></ul> | 08/29/2021
 
 ## Project Management Chart
 https://trello.com/b/8eTKq5Sz
@@ -39,30 +39,46 @@ https://trello.com/b/8eTKq5Sz
 ### Andres Estrada
 
 4th year in Computer Science
+
 Relevant Coursework: CS 100, CS 120A/B, CS 161
+
 Programming Languages: C/C++, Python, Java
+
 Hardware: Atmega, Spartan 3 FPGA
+
 Software: Atmel Studio
 
 ### Ricardo Lira
 4th year in Computer Science
+
 Relevant coursework: CS100, CS120A/B, CS161
+
 Programming Languages: C/C++, Java, Javascript
+
 Hardware: Atmega, BASYS 2 Spartan - 3E FPGA Trainer Board
+
 Software: Atmel Studio
 
 ### Jhaymar Sabino
 4th year in Computer Science
+
 Relevant Coursework: CS100, CS120B, CS170, CS171
+
 Programming Languages: C/C++, Java, Python, Javascript
+
 Hardware: ATMEGA 1284p
+
 Software: Atmel Studio
 
 ### Rizelle Vinluan
 4th year in Computer Science
+
 Relevant coursework: CS100, CS120A/B, CS161
+
 Programming Languages: C/C++, Python, Javascript
+
 Hardware: Atmega1284p, BASYS 2 Spartan - 3E FPGA Trainer Board
+
 Software: Atmel Studio 7
 
 
